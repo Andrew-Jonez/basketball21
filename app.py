@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
@@ -27,42 +27,35 @@ def home():
 
 @app.route('/play', methods=['GET', 'POST'])
 def play():
-    my_score = 0
-    opponent_score = 0
     if request.method == 'POST':
-        shot = request.form['action']
-        if shot.lower() == "shoot":
-            if score2points() == 1:
-                my_score += 2
-                if my_score >= max_score:
-                    return f"You won the game {my_score} to {opponent_score}!"
-            else:
-                rebound_result = rebound()
-                if rebound_result == "You got the ball back!":
-                    pass
-                else:
-                    while True:
-                        opponent_offense_result = opponent_offense()
-                        if opponent_offense_result == "Your opponent passed the ball!":
-                            steal = request.form['steal']
-                            if steal.lower() == "yes" and steal_ball():
-                                break
-                            else:
-                                continue
-                        else:
-                            if score2points() == 1:
-                                opponent_score += 2
-                                if opponent_score >= max_score:
-                                    return f"You lost the game {opponent_score} to {my_score}"
-                            else:
-                                rebound_result = rebound()
-                                if rebound_result == "Your Opponent rebounded the ball!":
-                                    continue
-                                else:
-                                    break
-        elif shot.lower() == "pass":
-            pass
-    return f"Your team score is {my_score}, Your opponent's team score is {opponent_score}. Will you pass or shoot?"
+        action = request.form['action']
+        steal = request.form.get('steal', '')
+        # Your game logic here, modify variables my_score and opponent_score accordingly
+        # For the sake of example, assume these values:
+        my_score = 0
+        opponent_score = 0
+
+        # Returning updated scores as an example; you'll need to include the actual game logic
+        return render_template_string('''
+            <p>Your team score is {{ my_score }}, Your opponent's team score is {{ opponent_score }}.</p>
+            <form method="POST">
+                <label for="action">Will you pass or shoot?</label>
+                <input type="text" id="action" name="action">
+                <button type="submit">Submit</button>
+                <br>
+                <label for="steal">Will you go for the steal? Type yes or no:</label>
+                <input type="text" id="steal" name="steal">
+            </form>
+        ''', my_score=my_score, opponent_score=opponent_score)
+
+    return render_template_string('''
+        <p>Your team score is 0, Your opponent's team score is 0. Will you pass or shoot?</p>
+        <form method="POST">
+            <label for="action">Will you pass or shoot?</label>
+            <input type="text" id="action" name="action">
+            <button type="submit">Submit</button>
+        </form>
+    ''')
 
 if __name__ == "__main__":
     app.run(debug=True)
