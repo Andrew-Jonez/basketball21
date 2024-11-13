@@ -27,91 +27,93 @@ def home():
 
 @app.route('/play', methods=['GET', 'POST'])
 def play():
-    my_score = request.args.get('my_score', default=0, type=int)
-    opponent_score = request.args.get('opponent_score', default=0, type=int)
+    my_score = request.form.get('my_score', default=0, type=int)
+    opponent_score = request.form.get('opponent_score', default=0, type=int)
     message = ""
+    action = request.form.get('action')
+    steal = request.form.get('steal')
 
     if request.method == 'POST':
-        action = request.form.get('action')
-        steal = request.form.get('steal', '')
-
         if action:
             if action.lower() == "shoot":
                 if score2points() == 1:
                     my_score += 2
                     message = "You scored 2 points!"
                     if my_score >= max_score:
-                        message += f" You won the game {my_score} to {opponent_score}!"
                         return render_template_string('''
                             <p>{{ message }}</p>
+                            <p>You won the game {{ my_score }} to {{ opponent_score }}!</p>
                             <a href="/play">Start a New Game</a>
-                        ''', message=message)
+                        ''', message=message, my_score=my_score, opponent_score=opponent_score)
                 else:
-                    message = "You missed"
-                    rebound_result = rebound()
-                    message += f" {rebound_result}"
-                    if rebound_result == "You got the ball back!":
+                    message = "You missed. " + rebound()
+                    if "You got the ball back!" in message:
                         return render_template_string('''
                             <p>{{ message }}</p>
                             <form method="POST">
+                                <input type="hidden" name="my_score" value="{{ my_score }}">
+                                <input type="hidden" name="opponent_score" value="{{ opponent_score }}">
                                 <label for="action">Will you pass or shoot?</label>
                                 <input type="text" id="action" name="action">
                                 <button type="submit">Submit</button>
                             </form>
-                        ''', message=message)
+                        ''', message=message, my_score=my_score, opponent_score=opponent_score)
         
-        if steal.lower() == "yes" and steal_ball():
+        if steal and steal.lower() == "yes" and steal_ball():
             message = "You stole the ball!"
             return render_template_string('''
                 <p>{{ message }}</p>
                 <form method="POST">
+                    <input type="hidden" name="my_score" value="{{ my_score }}">
+                    <input type="hidden" name="opponent_score" value="{{ opponent_score }}">
                     <label for="action">Will you pass or shoot?</label>
                     <input type="text" id="action" name="action">
                     <button type="submit">Submit</button>
                 </form>
-            ''', message=message)
+            ''', message=message, my_score=my_score, opponent_score=opponent_score)
 
-        while True:
+        if not action:
             opponent_offense_result = opponent_offense()
-            message += f" {opponent_offense_result}"
-            if opponent_offense_result == "Your opponent passed the ball!":
+            message = opponent_offense_result
+            if "passed the ball" in opponent_offense_result:
                 return render_template_string('''
                     <p>{{ message }}</p>
                     <form method="POST">
+                        <input type="hidden" name="my_score" value="{{ my_score }}">
+                        <input type="hidden" name="opponent_score" value="{{ opponent_score }}">
                         <label for="steal">Will you go for the steal? Type yes or no:</label>
                         <input type="text" id="steal" name="steal">
                         <button type="submit">Submit</button>
                     </form>
-                ''', message=message)
-            else:
+                ''', message=message, my_score=my_score, opponent_score=opponent_score)
+            elif "shot the ball" in opponent_offense_result:
                 if score2points() == 1:
                     opponent_score += 2
-                    message += f" Your opponent scored 2 points! Their score is now {opponent_score}."
                     if opponent_score >= max_score:
-                        message += f" You lost the game {opponent_score} to {my_score}."
                         return render_template_string('''
-                            <p>{{ message }}</p>
+                            <p>Your opponent scored 2 points! Their score is now {{ opponent_score }}.</p>
+                            <p>You lost the game {{ opponent_score }} to {{ my_score }}</p>
                             <a href="/play">Start a New Game</a>
-                        ''', message=message)
+                        ''', opponent_score=opponent_score, my_score=my_score)
                 else:
-                    message += " Your opponent missed."
-                    rebound_result = rebound()
-                    message += f" {rebound_result}"
-                    if rebound_result == "Your Opponent rebounded the ball!":
-                        continue
-                    else:
+                    message += " Your opponent missed. " + rebound()
+                    if "Your Opponent rebounded the ball!" in message:
                         return render_template_string('''
                             <p>{{ message }}</p>
                             <form method="POST">
+                                <input type="hidden" name="my_score" value="{{ my_score }}">
+                                <input type="hidden" name="opponent_score" value="{{ opponent_score }}">
                                 <label for="action">Will you pass or shoot?</label>
                                 <input type="text" id="action" name="action">
                                 <button type="submit">Submit</button>
                             </form>
-                        ''', message=message)
+                        ''', message=message, my_score=my_score, opponent_score=opponent_score)
 
     return render_template_string('''
         <p>Your team score is {{ my_score }}, Your opponent's team score is {{ opponent_score }}. {{ message }}</p>
         <form method="POST">
+            <input type="hidden" name="my_score" value="{{ my_score }}">
+            <input type="hidden" name="opponent_score" value="{{ opponent_score }}">
             <label for="action">Will you pass or shoot?</label>
             <input type="text" id="action" name="action">
             <button type="submit">Submit</button>
