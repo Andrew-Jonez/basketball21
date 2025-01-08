@@ -8,7 +8,6 @@ This is a simple Flask application that simulates a basketball game. The game lo
 basketball21
 ├── src
 │   ├── app.py               # Entry point of the Flask application
-│   ├── basketball21.py      # Game logic for the basketball game
 │   └── templates
 │       └── index.html       # HTML template for the main page
 ├── requirements.txt         # Dependencies for the project
